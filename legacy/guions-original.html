@@ -1,0 +1,630 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Guions d'Assaig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Atkinson+Hyperlegible+Mono:wght@500;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<style>
+/* Layout: workbench — editor column of section cards on the left, a sticky sheet of paper on the right that is exactly what gets printed. */
+:root {
+  --bg: #ECEFF4;
+  --panel: #FFFFFF;
+  --ink: #141A2E;
+  --muted: #5A6178;
+  --line: #D2D7E2;
+  --accent: #2340E8;
+  --accent-ink: #FFFFFF;
+  --danger: #C2253A;
+  --field: #F6F7FA;
+  --f-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F121A; --panel: #181C27; --ink: #E5E8F1; --muted: #9AA1B6; --line: #2B3141;
+    --accent: #7F91FF; --accent-ink: #0F121A; --danger: #FF6B7E; --field: #11141D;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F121A; --panel: #181C27; --ink: #E5E8F1; --muted: #9AA1B6; --line: #2B3141;
+  --accent: #7F91FF; --accent-ink: #0F121A; --danger: #FF6B7E; --field: #11141D;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--panel); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- top bar ---------- */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar-in { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; max-width: 1400px; margin: 0 auto; }
+.brand { font-family: var(--f-display); font-weight: 800; font-size: 26px; letter-spacing: .01em; text-transform: uppercase; line-height: 1; margin: 0; }
+.brand span { color: var(--accent); }
+.picker { display: flex; align-items: center; gap: 8px; flex: 1 1 260px; min-width: 0; }
+.picker select { flex: 1; min-width: 0; }
+.tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.status { font-size: 12px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+
+select, input[type=text], input[type=number], textarea {
+  background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+}
+select { padding-right: 28px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--panel);
+  border-radius: 8px; padding: 7px 12px; font-weight: 700; font-size: 14px; white-space: nowrap;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--danger); }
+.btn.danger.armed { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn.icon { padding: 6px 9px; min-width: 34px; justify-content: center; }
+.btn[disabled] { opacity: .45; cursor: default; }
+.group { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.group .btn { border: 0; border-radius: 0; }
+.group .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 8px; font-weight: 700; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
+
+/* ---------- layout ---------- */
+.tabs { display: none; }
+main {
+  max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: minmax(330px, 460px) minmax(0, 1fr); gap: 24px; align-items: start;
+  padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.col { min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.preview-col { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 74px); max-height: calc(100vh - 96px); overflow: auto; border-radius: var(--radius); }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { margin: 0; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.meta-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.meta-grid .wide { grid-column: span 2; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label { font-size: 12px; color: var(--muted); font-weight: 700; }
+.field input { width: 100%; min-width: 0; }
+
+.sec-card { gap: 8px; padding: 10px; border-left-width: 1px; }
+.sec-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sec-head select.type { font-weight: 700; }
+.sec-head input.label { flex: 1 1 90px; min-width: 0; }
+.sec-head .times { width: 64px; }
+.sec-head .moves { display: inline-flex; gap: 4px; margin-left: auto; }
+.chip { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; background: var(--ink); color: var(--panel); }
+textarea.lyrics {
+  width: 100%; min-height: 92px; resize: vertical; font-family: var(--f-mono); font-size: 13.5px; line-height: 1.55; tab-size: 4; white-space: pre;
+  overflow-x: auto;
+}
+.rep-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.add-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.add-row .btn { font-size: 13px; padding: 6px 10px; }
+.help { font-size: 13px; color: var(--muted); }
+.help code { font-family: var(--f-mono); background: var(--field); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; color: var(--ink); white-space: nowrap; }
+.help dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 6px 0 0; }
+.help dd { margin: 0; }
+
+.empty { text-align: center; padding: 40px 20px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.empty p { margin: 0; color: var(--muted); max-width: 34ch; }
+.empty .big { font-family: var(--f-display); font-weight: 800; font-size: 34px; text-transform: uppercase; color: var(--ink); line-height: 1; }
+.notice { font-size: 13px; color: var(--muted); }
+
+@media (max-width: 880px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+  .preview-col { position: static; max-height: none; overflow: visible; }
+  .tabs { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); width: 100%; }
+  .tabs button { flex: 1; border: 0; background: transparent; padding: 8px; font-weight: 700; }
+  .tabs button[aria-selected="true"] { background: var(--ink); color: var(--panel); }
+  body[data-tab="edit"] .preview-col { display: none; }
+  body[data-tab="sheet"] .edit-col { display: none; }
+  .meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<style id="sheet-css">
+/* The printed sheet: always paper and ink, both themes, so the preview is what the printer gives. */
+.sheet {
+  --s-paper: #FFFFFF; --s-ink: #111317; --s-soft: #5E6372; --s-chord: #1E3AD4; --s-rule: #D9DCE3;
+  --s-size: 16px;
+  background: var(--s-paper); color: var(--s-ink);
+  font-family: "Atkinson Hyperlegible", system-ui, sans-serif; font-size: var(--s-size); line-height: 1.25;
+  padding: 44px 48px 56px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 8px 28px rgba(15,20,40,.12);
+  max-width: 820px; margin: 0 auto; min-height: 1060px; color-scheme: light;
+}
+.sheet .s-head { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px 20px; align-items: end; border-bottom: 3px solid var(--s-ink); padding-bottom: 12px; margin-bottom: 22px; }
+.sheet .s-title { font-family: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif; font-weight: 800; font-size: 3.1em; line-height: .92; text-transform: uppercase; margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+.sheet .s-artist { font-size: 1.05em; color: var(--s-soft); margin: 4px 0 0; }
+.sheet .s-meta { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.sheet .s-meta div { border: 1.5px solid var(--s-ink); border-radius: 4px; padding: 3px 8px 2px; text-align: center; min-width: 52px; }
+.sheet .s-meta dt { font-size: .58em; letter-spacing: .1em; text-transform: uppercase; color: var(--s-soft); font-weight: 700; }
+.sheet .s-meta dd { margin: 0; font-family: "Atkinson Hyperlegible Mono", ui-monospace, monospace; font-weight: 700; font-size: .95em; }
+.sheet .s-body { display: flex; flex-direction: column; gap: 1.15em; }
+.sheet.two .s-body { display: block; column-count: 2; column-gap: 34px; column-rule: 1px solid var(--s-rule); }
+.sheet.two .sec { margin-bottom: 1.1em; }
+.sheet .sec { display: grid; grid-template-columns: 6.6em minmax(0,1fr); gap: 0 14px; break-inside: avoid; page-break-inside: avoid; }
+.sheet.two .sec { display: block; }
+.sheet .sec-lab { padding-top: 1.12em; }
+.sheet.two .sec-lab { padding-top: 0; margin-bottom: .25em; }
+.sheet .tag { display: inline-block; font-size: .64em; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; background: var(--s-ink); color: var(--s-paper); padding: 3px 6px 2px; border-radius: 3px; line-height: 1.2; }
+.sheet .tag.chorus { background: var(--s-chord); }
+.sheet .tag.light { background: transparent; color: var(--s-ink); box-shadow: inset 0 0 0 1.5px var(--s-ink); }
+.sheet .times { font-family: "Atkinson Hyperlegible Mono", ui-monospace, monospace; font-weight: 700; font-size: .78em; margin-left: 4px; }
+.sheet .sec.chorus .sec-txt { border-left: 3px solid var(--s-chord); padding-left: 12px; }
+.sheet .line { display: flex; flex-wrap: wrap; align-items: flex-end; min-height: 1.25em; }
+.sheet .seg { display: inline-flex; flex-direction: column; }
+.sheet .ch { font-family: "Atkinson Hyperlegible Mono", ui-monospace, monospace; font-weight: 700; color: var(--s-chord); font-size: .9em; line-height: 1.25; min-height: 1.25em; padding-right: .45em; white-space: pre; }
+.sheet .ly { white-space: pre; }
+.sheet .line.nochords .ch { display: none; }
+.sheet .chordrow { display: flex; flex-wrap: wrap; gap: .2em .9em; font-family: "Atkinson Hyperlegible Mono", ui-monospace, monospace; font-weight: 700; color: var(--s-chord); font-size: .95em; line-height: 1.5; }
+.sheet .chordrow .bar { color: var(--s-soft); font-weight: 500; }
+.sheet .chordrow .bt { color: var(--s-ink); font-weight: 500; }
+.sheet .tab { font-family: "Atkinson Hyperlegible Mono", ui-monospace, monospace; font-size: .78em; line-height: 1.3; margin: .2em 0; white-space: pre; overflow-x: auto; }
+.sheet .note { font-style: italic; color: var(--s-soft); font-size: .9em; }
+.sheet .gap { height: .6em; }
+.sheet .rep { font-size: .95em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-top: 0.15em; }
+.sheet .sec.is-rep .sec-lab { padding-top: 0; }
+.sheet .rep b { font-weight: 700; }
+.sheet .rep span { color: var(--s-soft); }
+.sheet .s-foot { margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--s-rule); font-size: .65em; color: var(--s-soft); letter-spacing: .06em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 10px; }
+@media (max-width: 600px) {
+  .sheet { padding: 24px 18px 32px; min-height: 0; }
+  .sheet .sec { grid-template-columns: minmax(0,1fr); }
+  .sheet .sec-lab { padding-top: 0; margin-bottom: .25em; }
+  .sheet .s-head { grid-template-columns: minmax(0,1fr); }
+  .sheet .s-meta { justify-content: flex-start; }
+}
+@media print {
+  @page { size: A4; margin: 13mm 14mm; }
+  html, body { background: #fff !important; margin: 0; padding: 0; }
+  .sheet { box-shadow: none; padding: 0; max-width: none; min-height: 0; border-radius: 0; }
+  .sheet .sec { grid-template-columns: 6.6em minmax(0,1fr); }
+  .sheet .sec-lab { padding-top: 1.12em; margin: 0; }
+  .sheet.two .sec { display: block; }
+  .sheet .tab { overflow: visible; }
+}
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <h1 class="brand">Guions<span>.</span></h1>
+    <div class="picker">
+      <select id="songSel" aria-label="Cançó oberta"></select>
+      <button class="btn primary" id="newBtn" type="button">+ Nova</button>
+    </div>
+    <div class="tools">
+      <div class="group" title="Transposa tots els acords">
+        <span class="lbl">To</span>
+        <button class="btn icon" id="tDown" type="button" aria-label="Baixa mig to">−½</button>
+        <button class="btn icon" id="tUp" type="button" aria-label="Puja mig to">+½</button>
+      </div>
+      <div class="group" title="Mida de la lletra al full">
+        <span class="lbl">Mida</span>
+        <button class="btn icon" id="fDown" type="button" aria-label="Lletra més petita">A−</button>
+        <button class="btn icon" id="fUp" type="button" aria-label="Lletra més gran">A+</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="twoCol"> 2 columnes</label>
+      <button class="btn" id="dlHtml" type="button" title="Baixa un fitxer que s'obre i imprimeix el full">Imprimir / PDF</button>
+      <button class="btn" id="dlPro" type="button" title="Baixa la cançó en format ChordPro">ChordPro</button>
+      <span class="status" id="status" aria-live="polite">Carregant…</span>
+    </div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tabEdit" aria-selected="true">Editar</button>
+      <button type="button" role="tab" id="tabSheet" aria-selected="false">Full</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="col edit-col" id="editCol" aria-label="Editor"></section>
+  <section class="preview-col" aria-label="Previsualització del full">
+    <article class="sheet" id="sheet"></article>
+  </section>
+</main>
+
+<script>
+(() => {
+  const TYPES = [
+    ["intro", "Intro"], ["verse", "Estrofa"], ["pre", "Pre-tornada"], ["chorus", "Tornada"],
+    ["bridge", "Pont"], ["solo", "Solo"], ["inst", "Instrumental"], ["outro", "Outro"], ["note", "Nota"], ["rep", "Repetició"]
+  ];
+  const TYPE_NAME = Object.fromEntries(TYPES);
+  const LS_KEY = "guions.songs.v1";
+  const $ = (id) => document.getElementById(id);
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/-/g, "").slice(0, 16);
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  const EXAMPLE = () => ({
+    title: "Últim tren", artist: "Cançó d'exemple", key: "D", bpm: "168", capo: "", time: "4/4", size: 16, two: false,
+    sections: [
+      { id: uid(), type: "intro", label: "", times: 2, text: "| [D] | [A] | [Bm] | [G] |" },
+      { id: "v1", type: "verse", label: "", times: 1, text: "[D]Les llums del carrer s'a[A]paguen d'una en una\n[Bm]tinc la motxilla plena i la [G]butxaca buida\n[D]el rellotge de l'estació em [A]diu que faig tard\n[Bm]però encara corro, encara [G]corro" },
+      { id: "p1", type: "pre", label: "", times: 1, text: "[Em]I no sé on em [G]porta,\nperò [A]pujo igual" },
+      { id: "c1", type: "chorus", label: "", times: 1, text: "[D]Últim tren, [A]últim crit\n[Bm]no em deixis aquí a[G]questa nit\n[D]Últim tren, [A]fins al final\n[Bm]tot el que tinc [G]cap dins un va[A]gó" },
+      { id: uid(), type: "verse", label: "", times: 1, text: "[D]Els amics ja dormen, els [A]bars tanquen la porta\n[Bm]la ciutat em mira com qui [G]mira una cosa morta\n[D]però tinc tres acords i [A]una veu esquerdada\n[Bm]i amb això ja en tinc prou per [G]no perdre la tornada" },
+      { id: uid(), type: "rep", label: "", times: 1, ref: "p1", text: "" },
+      { id: uid(), type: "rep", label: "", times: 2, ref: "c1", text: "" },
+      { id: uid(), type: "solo", label: "", times: 2, text: "| [Bm] | [G] | [D] | [A] |\ne|--------------------------|\nB|--10-12-10----------10----|\nG|------------11-9-11-------|\n(segona volta, una octava amunt)" },
+      { id: uid(), type: "bridge", label: "", times: 1, text: "[G]I quan arribi on sigui, [A]no miraré enrere\n[Bm]que el que deixo a l'andana [A]ja no m'espera" },
+      { id: uid(), type: "rep", label: "", times: 2, ref: "c1", text: "" },
+      { id: uid(), type: "outro", label: "", times: 1, text: "| [D] | [A] | [Bm] | [G] | [D] |\n(cop final tots junts)" }
+    ]
+  });
+
+  // ---------- state ----------
+  const S = { songs: new Map(), cur: null, mode: "loading", db: null, dirty: false, saving: false, again: false, timer: null, readonly: false };
+  const curSong = () => S.songs.get(S.cur);
+
+  // ---------- parsing & rendering ----------
+  const isTab = (l) => /^\s*[a-gA-G]?\|[-0-9hpbr\/\\~x|]/.test(l) && /-{2,}/.test(l);
+  function parseLine(line) {
+    const segs = []; const re = /\[([^\]]*)\]/g; let last = 0, m, pending = "";
+    while ((m = re.exec(line))) {
+      const txt = line.slice(last, m.index);
+      if (segs.length || txt) segs.length ? (segs[segs.length - 1].t += txt) : segs.push({ c: "", t: txt });
+      segs.push({ c: m[1].trim(), t: "" }); last = re.lastIndex;
+    }
+    const tail = line.slice(last);
+    if (segs.length) segs[segs.length - 1].t += tail; else segs.push({ c: "", t: tail });
+    return segs;
+  }
+  function renderText(text) {
+    const out = [];
+    for (const raw of String(text || "").split("\n")) {
+      const line = raw.replace(/\s+$/, "");
+      if (!line.trim()) { out.push('<div class="gap"></div>'); continue; }
+      if (isTab(line)) { out.push(`<div class="tab">${esc(line)}</div>`); continue; }
+      if (/^\s*\(.*\)\s*$/.test(line)) { out.push(`<div class="note">${esc(line.trim())}</div>`); continue; }
+      const segs = parseLine(line);
+      const hasChords = segs.some((s) => s.c);
+      const lyricText = segs.map((s) => s.t).join("").replace(/[|\s:x×0-9%.\/-]/gi, "");
+      if (hasChords && !lyricText) {
+        // chord-only row (intros, solos): show chords with bar lines
+        const parts = [];
+        const re = /\[([^\]]*)\]|(\|+:?|:?\|+)|([^\[\]|\s]+)/g; let m;
+        while ((m = re.exec(line))) {
+          if (m[1] !== undefined) parts.push(`<span>${esc(m[1].trim())}</span>`);
+          else if (m[2]) parts.push(`<span class="bar">${esc(m[2])}</span>`);
+          else if (m[3]) parts.push(`<span class="bt">${esc(m[3])}</span>`);
+        }
+        out.push(`<div class="chordrow">${parts.join("")}</div>`); continue;
+      }
+      out.push(`<div class="line${hasChords ? "" : " nochords"}">` + segs.map((s) =>
+        `<span class="seg"><span class="ch">${esc(s.c)}</span><span class="ly">${esc(s.t || (s.c ? " " : ""))}</span></span>`).join("") + "</div>");
+    }
+    return out.join("");
+  }
+  function autoLabels(song) {
+    const counts = {}, idx = {}, labels = {};
+    for (const s of song.sections) if (s.type !== "rep") counts[s.type] = (counts[s.type] || 0) + 1;
+    for (const s of song.sections) {
+      if (s.type === "rep") continue;
+      idx[s.type] = (idx[s.type] || 0) + 1;
+      labels[s.id] = s.label?.trim() || (TYPE_NAME[s.type] + (counts[s.type] > 1 && ["verse", "chorus", "pre", "solo", "bridge"].includes(s.type) ? " " + idx[s.type] : ""));
+    }
+    // a repeated chorus reads better without its number when there is only one written chorus
+    return labels;
+  }
+  function sheetHTML(song) {
+    const labels = autoLabels(song);
+    const meta = [["To", song.key], ["BPM", song.bpm], ["Compàs", song.time], ["Capo", song.capo]].filter(([, v]) => String(v || "").trim());
+    const secs = song.sections.map((s) => {
+      const times = Number(s.times) > 1 ? `<span class="times">×${Number(s.times)}</span>` : "";
+      if (s.type === "rep") {
+        const ref = song.sections.find((x) => x.id === s.ref);
+        const name = ref ? labels[ref.id] : "—";
+        const chorus = ref && ref.type === "chorus";
+        return `<section class="sec is-rep"><div class="sec-lab"><span class="tag light">Repeteix</span></div>
+          <div class="rep"><span class="tag${chorus ? " chorus" : ""}">${esc(name)}</span>${times}<span>com a dalt</span></div></section>`;
+      }
+      const cls = s.type === "chorus" ? " chorus" : "";
+      const tagCls = s.type === "chorus" ? " chorus" : (s.type === "note" ? " light" : "");
+      return `<section class="sec${cls}"><div class="sec-lab"><span class="tag${tagCls}">${esc(labels[s.id])}</span>${times}</div>
+        <div class="sec-txt">${renderText(s.text)}</div></section>`;
+    }).join("");
+    return `<header class="s-head"><div><h1 class="s-title">${esc(song.title || "Sense títol")}</h1>${song.artist ? `<p class="s-artist">${esc(song.artist)}</p>` : ""}</div>
+      ${meta.length ? `<dl class="s-meta">${meta.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}</header>
+      <div class="s-body">${secs || '<p class="note">Afegeix una secció per començar.</p>'}</div>
+      <footer class="s-foot"><span>${esc(song.title || "")}</span><span>${structureLine(song, labels)}</span></footer>`;
+  }
+  function structureLine(song, labels) {
+    const abbr = { intro: "Intro", verse: "E", pre: "Pre", chorus: "T", bridge: "Pont", solo: "Solo", inst: "Inst", outro: "Outro" };
+    return song.sections.filter((s) => s.type !== "note").map((s) => {
+      const t = s.type === "rep" ? (song.sections.find((x) => x.id === s.ref) || {}).type : s.type;
+      const a = abbr[t] || ""; return a + (Number(s.times) > 1 ? "×" + s.times : "");
+    }).filter(Boolean).map(esc).join(" · ");
+  }
+  function renderSheet() {
+    const song = curSong(); const el = $("sheet");
+    if (!song) { el.innerHTML = '<div class="s-body"><p class="note">Cap cançó oberta.</p></div>'; return; }
+    el.classList.toggle("two", !!song.two);
+    el.style.setProperty("--s-size", (song.size || 16) + "px");
+    el.innerHTML = sheetHTML(song);
+  }
+
+  // ---------- transpose ----------
+  const SH = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const FL = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  const noteIdx = (n) => { const i = SH.indexOf(n); return i >= 0 ? i : FL.indexOf(n); };
+  const FLAT_KEYS = new Set(["F", "A#", "D#", "G#", "C#", "Dm", "Gm", "Cm", "Fm", "A#m", "D#m"]);
+  function tNote(n, d, flat) { const i = noteIdx(n); return i < 0 ? n : (flat ? FL : SH)[(i + d + 120) % 12]; }
+  function tChord(c, d, flat) {
+    const m = c.match(/^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/); if (!m) return c;
+    return tNote(m[1], d, flat) + m[2] + (m[3] ? "/" + tNote(m[3], d, flat) : "");
+  }
+  function transpose(song, d) {
+    let flat;
+    const km = String(song.key || "").trim().match(/^([A-G][#b]?)(m?)/);
+    if (km) { const nk = SH[(noteIdx(km[1]) + d + 120) % 12] + km[2]; flat = FLAT_KEYS.has(nk); song.key = tNote(km[1], d, flat) + String(song.key).trim().slice(km[1].length); }
+    else flat = song.sections.some((s) => /\[[A-G]b/.test(s.text || ""));
+    for (const s of song.sections) s.text = String(s.text || "").replace(/\[([^\]]*)\]/g, (_, c) => "[" + tChord(c.trim(), d, flat) + "]");
+  }
+
+  // ---------- editor ----------
+  function renderEditor() {
+    const col = $("editCol"); const song = curSong();
+    if (!song) {
+      col.innerHTML = `<div class="card empty"><div class="big">Cap guió encara</div>
+        <p>Crea una cançó nova o carrega l'exemple per veure com s'escriuen els acords sobre la lletra.</p>
+        <div class="add-row" style="justify-content:center"><button class="btn primary" type="button" data-act="new">+ Cançó nova</button>
+        <button class="btn" type="button" data-act="example">Carrega l'exemple</button></div></div>`;
+      return;
+    }
+    const opt = (v, cur) => `<option value="${v}"${v === cur ? " selected" : ""}>${TYPE_NAME[v]}</option>`;
+    const timesOpt = (n) => [1, 2, 3, 4].map((i) => `<option value="${i}"${i === Number(n || 1) ? " selected" : ""}>${i === 1 ? "×1" : "×" + i}</option>`).join("");
+    const labels = autoLabels(song);
+    const secCards = song.sections.map((s, i) => {
+      const head = `<div class="sec-head">
+          <select class="type" data-k="type" aria-label="Tipus de secció">${TYPES.map(([v]) => opt(v, s.type)).join("")}</select>
+          ${s.type === "rep" ? "" : `<input type="text" class="label" data-k="label" value="${esc(s.label)}" placeholder="${esc(labels[s.id] || "")}" aria-label="Nom de la secció">`}
+          <select class="times" data-k="times" aria-label="Repeticions">${timesOpt(s.times)}</select>
+          <span class="moves">
+            <button class="btn icon" type="button" data-act="up" aria-label="Puja la secció"${i === 0 ? " disabled" : ""}>↑</button>
+            <button class="btn icon" type="button" data-act="down" aria-label="Baixa la secció"${i === song.sections.length - 1 ? " disabled" : ""}>↓</button>
+            <button class="btn icon danger" type="button" data-act="del" aria-label="Esborra la secció">✕</button>
+          </span></div>`;
+      let body;
+      if (s.type === "rep") {
+        const prev = song.sections.slice(0, i).filter((x) => x.type !== "rep" && x.type !== "note");
+        body = `<div class="rep-row">Repeteix <select data-k="ref" id="ref-${s.id}" aria-label="Secció a repetir">${prev.length ? prev.map((x) => `<option value="${x.id}"${x.id === s.ref ? " selected" : ""}>${esc(labels[x.id])}</option>`).join("") : '<option value="">(no hi ha seccions abans)</option>'}</select> sense tornar-la a escriure.</div>`;
+      } else {
+        body = `<textarea class="lyrics" id="tx-${s.id}" data-k="text" spellcheck="false" rows="${Math.max(3, String(s.text || "").split("\n").length + 1)}" placeholder="[Am]Escriu la lletra amb els [F]acords entre claudàtors">${esc(s.text)}</textarea>`;
+      }
+      return `<div class="card sec-card" data-id="${s.id}">${head}${body}</div>`;
+    }).join("");
+    col.innerHTML = `
+      <div class="card"><h2>Cançó</h2>
+        <div class="meta-grid">
+          <div class="field wide"><label for="m-title">Títol</label><input type="text" id="m-title" data-m="title" value="${esc(song.title)}"></div>
+          <div class="field wide"><label for="m-artist">Artista</label><input type="text" id="m-artist" data-m="artist" value="${esc(song.artist)}"></div>
+          <div class="field"><label for="m-key">To</label><input type="text" id="m-key" data-m="key" value="${esc(song.key)}" placeholder="Am"></div>
+          <div class="field"><label for="m-bpm">BPM</label><input type="text" id="m-bpm" data-m="bpm" inputmode="numeric" value="${esc(song.bpm)}"></div>
+          <div class="field"><label for="m-time">Compàs</label><input type="text" id="m-time" data-m="time" value="${esc(song.time)}" placeholder="4/4"></div>
+          <div class="field"><label for="m-capo">Capo</label><input type="text" id="m-capo" data-m="capo" inputmode="numeric" value="${esc(song.capo)}"></div>
+        </div></div>
+      ${secCards}
+      <div class="card"><h2>Afegeix una secció</h2>
+        <div class="add-row">${TYPES.map(([v, n]) => `<button class="btn" type="button" data-add="${v}">+ ${n}</button>`).join("")}</div></div>
+      <div class="card help"><h2>Com s'escriu</h2>
+        <dl>
+          <dt><code>[Am]Quan la [F]nit</code></dt><dd>L'acord queda just a sobre de la síl·laba.</dd>
+          <dt><code>| [D] | [A] |</code></dt><dd>Línia només d'acords, amb compassos.</dd>
+          <dt><code>e|--5-7--|</code></dt><dd>Tabulatura, es manté alineada.</dd>
+          <dt><code>(x2 al final)</code></dt><dd>Nota entre parèntesis, en cursiva.</dd>
+        </dl>
+      </div>
+      <div class="card"><h2>Esborra</h2><div class="add-row"><button class="btn danger" type="button" id="delSong">Esborra aquesta cançó</button></div></div>`;
+  }
+
+  function renderPicker() {
+    const sel = $("songSel");
+    const list = [...S.songs.entries()].sort((a, b) => String(a[1].title || "").localeCompare(String(b[1].title || ""), "ca"));
+    sel.innerHTML = list.length ? list.map(([id, s]) => `<option value="${id}"${id === S.cur ? " selected" : ""}>${esc(s.title || "Sense títol")}${s.artist ? " — " + esc(s.artist) : ""}</option>`).join("") : '<option value="">Cap cançó</option>';
+    sel.disabled = !list.length;
+    const has = !!curSong();
+    for (const id of ["tUp", "tDown", "fUp", "fDown", "dlHtml", "dlPro", "twoCol"]) $(id).disabled = !has;
+    $("twoCol").checked = !!curSong()?.two;
+  }
+  const renderAll = () => { renderPicker(); renderEditor(); renderSheet(); };
+
+  // ---------- persistence ----------
+  function setStatus(t) { $("status").textContent = t; }
+  function clean(song) { return JSON.parse(JSON.stringify(song)); }
+  function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(Object.fromEntries(S.songs))); } catch (e) {} }
+  function touch() {
+    const song = curSong(); if (!song) return;
+    song.updatedAt = Date.now(); S.dirty = true;
+    if (S.readonly) { setStatus("Només lectura"); return; }
+    setStatus("Desant…");
+    clearTimeout(S.timer); S.timer = setTimeout(flush, 700);
+  }
+  async function flush() {
+    const id = S.cur; const song = S.songs.get(id); if (!song) return;
+    if (S.mode !== "db") { saveLocal(); S.dirty = false; setStatus("Desat en aquest navegador"); return; }
+    if (S.saving) { S.again = true; return; }
+    S.saving = true; S.dirty = false;
+    try { await S.db.collection("songs").doc(id).set(clean(song)); setStatus("Desat"); }
+    catch (e) {
+      if (e && e.code === "permission_denied") { S.readonly = true; setStatus("Només lectura"); }
+      else { S.dirty = true; setStatus("No s'ha pogut desar"); }
+    }
+    S.saving = false;
+    if (S.again) { S.again = false; flush(); }
+  }
+  async function removeSong(id) {
+    S.songs.delete(id);
+    if (S.mode === "db") { try { await S.db.collection("songs").doc(id).delete(); } catch (e) { setStatus("No s'ha pogut esborrar"); } }
+    else saveLocal();
+    S.cur = [...S.songs.keys()][0] || null; S.dirty = false; renderAll();
+  }
+  function addSong(song) {
+    const id = uid(); song.updatedAt = Date.now(); S.songs.set(id, song); S.cur = id; renderAll(); touch(); flush();
+    setTab("edit"); setTimeout(() => $("m-title")?.focus(), 0);
+  }
+  const blankSong = () => ({ title: "", artist: "", key: "", bpm: "", capo: "", time: "4/4", size: 16, two: false,
+    sections: [{ id: uid(), type: "intro", label: "", times: 1, text: "" }, { id: uid(), type: "verse", label: "", times: 1, text: "" }, { id: uid(), type: "chorus", label: "", times: 1, text: "" }] });
+
+  function useLocal() {
+    S.mode = "local";
+    try { const raw = localStorage.getItem(LS_KEY); if (raw) for (const [k, v] of Object.entries(JSON.parse(raw))) S.songs.set(k, v); } catch (e) {}
+    pickLatest(); renderAll(); setStatus("Desat en aquest navegador");
+  }
+  function pickLatest() {
+    if (S.cur && S.songs.has(S.cur)) return;
+    let best = null; for (const [id, s] of S.songs) if (!best || (s.updatedAt || 0) > (S.songs.get(best).updatedAt || 0)) best = id;
+    S.cur = best;
+  }
+  async function boot() {
+    renderAll();
+    let db = null;
+    try { db = window.claude && window.claude.use ? await window.claude.use("db") : null; } catch (e) { db = null; }
+    if (!db) { useLocal(); return; }
+    S.db = db; S.mode = "db"; setStatus("Carregant…");
+    let first = true;
+    const timer = setTimeout(() => { if (first) setStatus("Connexió lenta…"); }, 10000);
+    db.collection("songs").onSnapshot((snap) => {
+      clearTimeout(timer);
+      const busyId = (S.dirty || S.saving) ? S.cur : null;
+      const seen = new Set();
+      for (const d of snap.docs) {
+        seen.add(d.id);
+        if (d.id === busyId) continue;
+        if (d.metadata.hasPendingWrites && d.id === S.cur) continue;
+        S.songs.set(d.id, clean(d.data()));
+      }
+      for (const id of [...S.songs.keys()]) if (!seen.has(id) && id !== busyId && !snap.metadata.fromCache) S.songs.delete(id);
+      const wasCur = S.cur; pickLatest();
+      const editingNow = document.activeElement && $("editCol").contains(document.activeElement);
+      if (first || wasCur !== S.cur || !S.songs.has(wasCur)) { renderAll(); }
+      else if (!busyId && !editingNow) { renderAll(); }
+      else { renderPicker(); }
+      if (first) setStatus(S.songs.size ? "Desat" : "Llest");
+      first = false;
+    }, (e) => { clearTimeout(timer); setStatus("Sense connexió"); if (first) useLocal(); });
+  }
+
+  // ---------- events ----------
+  const col = $("editCol");
+  col.addEventListener("input", (e) => {
+    const song = curSong(); if (!song) return;
+    const t = e.target;
+    if (t.dataset.m) { song[t.dataset.m] = t.value; touch(); renderSheet(); if (t.dataset.m === "title" || t.dataset.m === "artist") renderPicker(); return; }
+    const card = t.closest("[data-id]"); if (!card) return;
+    const s = song.sections.find((x) => x.id === card.dataset.id); if (!s) return;
+    if (t.dataset.k === "text") { s.text = t.value; const rows = t.value.split("\n").length + 1; if (rows > t.rows) t.rows = rows; }
+    else if (t.dataset.k === "label") s.label = t.value;
+    else return;
+    touch(); renderSheet();
+  });
+  col.addEventListener("change", (e) => {
+    const song = curSong(); if (!song) return;
+    const t = e.target; const card = t.closest("[data-id]"); if (!card) return;
+    const s = song.sections.find((x) => x.id === card.dataset.id); if (!s) return;
+    if (t.dataset.k === "type") {
+      s.type = t.value;
+      if (s.type === "rep" && !s.ref) { const i = song.sections.indexOf(s); const prev = song.sections.slice(0, i).reverse().find((x) => x.type === "chorus") || song.sections.slice(0, i).reverse().find((x) => x.type !== "rep" && x.type !== "note"); s.ref = prev ? prev.id : ""; }
+      renderEditor();
+    } else if (t.dataset.k === "times") s.times = Number(t.value);
+    else if (t.dataset.k === "ref") s.ref = t.value;
+    else return;
+    touch(); renderSheet();
+  });
+  col.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.act === "new") return addSong(blankSong());
+    if (b.dataset.act === "example") return addSong(EXAMPLE());
+    const song = curSong(); if (!song) return;
+    if (b.id === "delSong") {
+      if (!b.classList.contains("armed")) { b.classList.add("armed"); b.textContent = "Segur? Toca per esborrar"; setTimeout(() => { if (b.isConnected) { b.classList.remove("armed"); b.textContent = "Esborra aquesta cançó"; } }, 4000); return; }
+      return removeSong(S.cur);
+    }
+    if (b.dataset.add) {
+      const sec = { id: uid(), type: b.dataset.add, label: "", times: 1, text: "" };
+      if (sec.type === "rep") { const prev = [...song.sections].reverse().find((x) => x.type === "chorus") || [...song.sections].reverse().find((x) => x.type !== "rep" && x.type !== "note"); sec.ref = prev ? prev.id : ""; sec.times = 1; }
+      song.sections.push(sec); touch(); renderEditor(); renderSheet();
+      document.getElementById("tx-" + sec.id)?.focus(); return;
+    }
+    const card = b.closest("[data-id]"); if (!card) return;
+    const i = song.sections.findIndex((x) => x.id === card.dataset.id); if (i < 0) return;
+    if (b.dataset.act === "up" && i > 0) [song.sections[i - 1], song.sections[i]] = [song.sections[i], song.sections[i - 1]];
+    else if (b.dataset.act === "down" && i < song.sections.length - 1) [song.sections[i + 1], song.sections[i]] = [song.sections[i], song.sections[i + 1]];
+    else if (b.dataset.act === "del") {
+      const id = song.sections[i].id; song.sections.splice(i, 1);
+      for (const s of song.sections) if (s.type === "rep" && s.ref === id) s.ref = "";
+    } else return;
+    touch(); renderEditor(); renderSheet();
+  });
+
+  $("songSel").addEventListener("change", (e) => {
+    if (S.dirty) { clearTimeout(S.timer); flush(); }
+    S.cur = e.target.value || null; renderAll();
+  });
+  $("newBtn").addEventListener("click", () => addSong(blankSong()));
+  const tr = (d) => { const s = curSong(); if (!s) return; transpose(s, d); touch(); renderEditor(); renderSheet(); };
+  $("tUp").addEventListener("click", () => tr(1));
+  $("tDown").addEventListener("click", () => tr(-1));
+  const fs = (d) => { const s = curSong(); if (!s) return; s.size = Math.min(22, Math.max(12, (s.size || 16) + d)); touch(); renderSheet(); };
+  $("fUp").addEventListener("click", () => fs(1));
+  $("fDown").addEventListener("click", () => fs(-1));
+  $("twoCol").addEventListener("change", (e) => { const s = curSong(); if (!s) return; s.two = e.target.checked; touch(); renderSheet(); });
+
+  function setTab(t) {
+    document.body.dataset.tab = t;
+    $("tabEdit").setAttribute("aria-selected", t === "edit"); $("tabSheet").setAttribute("aria-selected", t === "sheet");
+  }
+  $("tabEdit").addEventListener("click", () => setTab("edit"));
+  $("tabSheet").addEventListener("click", () => setTab("sheet"));
+  setTab("edit");
+
+  // ---------- export ----------
+  const slug = (s) => (String(s || "canco").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "canco");
+  function standaloneHTML(song) {
+    const css = $("sheet-css").textContent;
+    return `<!doctype html><html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(song.title || "Guió")}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Atkinson+Hyperlegible+Mono:wght@500;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<style>html,body{margin:0;background:#e9ebef;font-family:system-ui,sans-serif}body{padding:24px 16px}${css}</style></head>
+<body><article class="sheet${song.two ? " two" : ""}" style="--s-size:${song.size || 16}px">${sheetHTML(song)}</article>
+<script>(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(function(){setTimeout(function(){window.print()},300)});<\/script></body></html>`;
+  }
+  function chordPro(song) {
+    const labels = autoLabels(song); const L = [];
+    L.push(`{title: ${song.title || ""}}`); if (song.artist) L.push(`{artist: ${song.artist}}`);
+    if (song.key) L.push(`{key: ${song.key}}`); if (song.bpm) L.push(`{tempo: ${song.bpm}}`);
+    if (song.time) L.push(`{time: ${song.time}}`); if (song.capo) L.push(`{capo: ${song.capo}}`);
+    for (const s of song.sections) {
+      L.push("");
+      const x = Number(s.times) > 1 ? ` x${s.times}` : "";
+      if (s.type === "rep") { const r = song.sections.find((y) => y.id === s.ref); L.push(`{comment: ${r ? labels[r.id] : "—"}${x}}`); continue; }
+      if (s.type === "chorus") { L.push(`{start_of_chorus: ${labels[s.id]}${x}}`, s.text || "", "{end_of_chorus}"); }
+      else if (s.type === "verse") { L.push(`{start_of_verse: ${labels[s.id]}${x}}`, s.text || "", "{end_of_verse}"); }
+      else { L.push(`{comment: ${labels[s.id]}${x}}`, s.text || ""); }
+    }
+    return L.join("\n") + "\n";
+  }
+  let downloads; let dlTried = false;
+  async function offer(filename, data) {
+    if (!dlTried) { dlTried = true; try { downloads = await window.claude?.use?.("downloads"); } catch (e) { downloads = null; } }
+    if (!downloads) { setStatus("Descàrrega no disponible aquí"); return; }
+    try { await downloads.save({ filename, data }); setStatus("Fitxer baixat"); }
+    catch (e) { if (e?.code === "declined") return; setStatus("No s'ha pogut baixar"); }
+  }
+  $("dlHtml").addEventListener("click", () => { const s = curSong(); if (s) offer(slug(s.title) + ".html", standaloneHTML(s)); });
+  $("dlPro").addEventListener("click", () => { const s = curSong(); if (s) offer(slug(s.title) + ".txt", chordPro(s)); });
+
+  window.addEventListener("beforeunload", () => { if (S.dirty) { clearTimeout(S.timer); flush(); } });
+  boot();
+})();
+</script>
+
+</body></html>
