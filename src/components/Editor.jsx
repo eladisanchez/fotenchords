@@ -49,7 +49,7 @@ export function Backup({ onExportAll, onImport, canExport }) {
   );
 }
 
-export default function Editor({ song, update, onNew, onExample, onDelete, backup, focusId, onFocused }) {
+export default function Editor({ song, update, folders = [], onNew, onExample, onDelete, backup, focusId, onFocused }) {
   useEffect(() => {
     if (!focusId) return;
     document.getElementById(focusId)?.focus();
@@ -104,6 +104,15 @@ export default function Editor({ song, update, onNew, onExample, onDelete, backu
               <input type="text" id={"m-" + k} value={song[k] || ""} placeholder={ph || undefined} inputMode={im || undefined} onChange={setMeta(k)} />
             </div>
           ))}
+          <div className="field wide">
+            <label htmlFor="m-folder">Carpeta</label>
+            <input
+              type="text" id="m-folder" list="folder-list" value={song.folder || ""} placeholder="Cap (escriu un nom per crear-ne una)"
+              onChange={setMeta("folder")}
+              onBlur={(e) => { const v = e.target.value.trim(); if (v !== e.target.value) update((s) => { s.folder = v; }); }}
+            />
+            <datalist id="folder-list">{folders.map((f) => <option key={f} value={f} />)}</datalist>
+          </div>
         </div>
       </div>
 

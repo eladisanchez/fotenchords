@@ -3,20 +3,30 @@ import Editor, { Backup } from "./components/Editor.jsx";
 import Sheet from "./components/Sheet.jsx";
 import StatusIcon from "./components/StatusIcon.jsx";
 import { standaloneHTML } from "./lib/exportHtml.jsx";
-import { MAX_SIZE, MIN_SIZE, blankSong, chordPro, exampleSong, slug, transpose, uid } from "./lib/song.js";
+import { MAX_SIZE, MIN_SIZE, blankSong, chordPro, exampleSong, folderOf, listFolders, slug, transpose, uid } from "./lib/song.js";
 import { LS_KEY, download, loadSongs, mergeNewest, parseBackup, saveSongs } from "./lib/storage.js";
 
 const SAVED = { kind: "saved", text: "Desat en aquest dispositiu" };
 
-function pickLatest(songs) {
+// Folder filter: ALL, "" (songs without a folder) or a folder name. Per-device preference.
+const ALL = "*";
+const FOLDER_KEY = "guions.folder";
+const loadFolder = () => { try { return localStorage.getItem(FOLDER_KEY) ?? ALL; } catch { return ALL; } };
+const inFolder = (s, f) => f === ALL || folderOf(s) === f;
+
+function pickLatest(songs, f = ALL) {
   let best = null;
-  for (const [id, s] of Object.entries(songs)) if (!best || (s.updatedAt || 0) > (songs[best].updatedAt || 0)) best = id;
+  for (const [id, s] of Object.entries(songs)) {
+    if (!inFolder(s, f)) continue;
+    if (!best || (s.updatedAt || 0) > (songs[best].updatedAt || 0)) best = id;
+  }
   return best;
 }
 
 export default function App() {
   const [songs, setSongs] = useState(loadSongs);
-  const [cur, setCur] = useState(() => pickLatest(songs));
+  const [folder, setFolder] = useState(loadFolder);
+  const [cur, setCur] = useState(() => pickLatest(songs, folder) || pickLatest(songs));
   const [status, setStatus] = useState(SAVED);
   const [tab, setTab] = useState("edit");
   const [focusId, setFocusId] = useState(null);
@@ -90,8 +100,28 @@ export default function App() {
 
   useEffect(() => { document.body.dataset.tab = tab; }, [tab]);
 
-  // ---------- mutations ----------
+  // ---------- folders ----------
   const song = cur ? songs[cur] : null;
+  const folders = listFolders(songs);
+  const hasUnfiled = Object.values(songs).some((s) => !folderOf(s));
+
+  // Keep the filter valid and always showing the open song (e.g. after its folder changes or an import).
+  useEffect(() => {
+    let next = folder;
+    if (next !== ALL && (next === "" ? !hasUnfiled || !folders.length : !folders.includes(next))) next = ALL;
+    if (song && !inFolder(song, next)) next = folderOf(song) || ALL;
+    if (next !== folder) setFolder(next);
+  }, [folder, song, folders, hasUnfiled]);
+
+  useEffect(() => { try { localStorage.setItem(FOLDER_KEY, folder); } catch { /* ignore */ } }, [folder]);
+
+  const selectFolder = (f) => {
+    flush();
+    setFolder(f);
+    if (!song || !inFolder(song, f)) setCur(pickLatest(songs, f));
+  };
+
+  // ---------- mutations ----------
 
   /** Apply `fn` to a copy of the current song. `focus` = element id to focus after render. */
   const update = useCallback((fn, focus) => {
@@ -109,6 +139,7 @@ export default function App() {
 
   const addSong = (s) => {
     const id = uid();
+    if (folder !== ALL && folder) s.folder = folder;
     s.updatedAt = Date.now();
     dirty.current = true; immediate.current = true;
     setSongs((prev) => ({ ...prev, [id]: s }));
@@ -149,7 +180,7 @@ export default function App() {
 
   const printSheet = () => { flush(); window.print(); };
 
-  const list = Object.entries(songs).sort((a, b) => String(a[1].title || "").localeCompare(String(b[1].title || ""), "ca"));
+  const list = Object.entries(songs).filter(([, s]) => inFolder(s, folder)).sort((a, b) => String(a[1].title || "").localeCompare(String(b[1].title || ""), "ca"));
   const has = !!song;
   const onFocused = useCallback(() => setFocusId(null), []);
 
@@ -159,6 +190,13 @@ export default function App() {
         <div className="bar-in">
           <h1 className="brand">FotenChords<span>.</span></h1>
           <div className="picker">
+            {folders.length ? (
+              <select className="folder" aria-label="Carpeta" value={folder} onChange={(e) => selectFolder(e.target.value)}>
+                <option value={ALL}>Totes les carpetes</option>
+                {folders.map((f) => <option key={f} value={f}>{f}</option>)}
+                {hasUnfiled ? <option value="">Sense carpeta</option> : null}
+              </select>
+            ) : null}
             <select aria-label="Cançó oberta" value={cur || ""} disabled={!list.length} onChange={(e) => selectSong(e.target.value)}>
               {list.length
                 ? list.map(([id, s]) => <option key={id} value={id}>{(s.title || "Sense títol") + (s.artist ? " — " + s.artist : "")}</option>)
@@ -198,6 +236,7 @@ export default function App() {
             key={cur || "none"}
             song={song}
             update={update}
+            folders={folders}
             onNew={() => addSong(blankSong())}
             onExample={() => addSong(exampleSong())}
             onDelete={deleteSong}

@@ -52,6 +52,7 @@ button { cursor: pointer; }
 .brand span { color: var(--accent); }
 .picker { display: flex; align-items: center; gap: 8px; flex: 1 1 260px; min-width: 0; }
 .picker select { flex: 1; min-width: 0; }
+.picker select.folder { flex: 0 1 180px; }
 .tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .status { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; color: var(--muted); }
 .status.error { color: var(--danger); }

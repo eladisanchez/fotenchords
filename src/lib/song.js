@@ -7,6 +7,13 @@ export const TYPE_NAME = Object.fromEntries(TYPES);
 export const MIN_SIZE = 12;
 export const MAX_SIZE = 22;
 
+/** A song's folder name; "" when it has none. Folders are derived from songs, never stored on their own. */
+export const folderOf = (s) => String(s?.folder || "").trim();
+
+/** Unique non-empty folder names across a { [id]: song } map, sorted. */
+export const listFolders = (songs) =>
+  [...new Set(Object.values(songs).map(folderOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/-/g, "").slice(0, 16);
 

@@ -18,7 +18,8 @@ FotenChords: a PWA (React 19 + Vite 8 + `vite-plugin-pwa`) for writing rehearsal
 ## Architecture
 
 - **`src/lib/song.js`**: pure song logic with no React.
-  - Song model: `{ title, artist, key, bpm, capo, time, size, two, updatedAt, sections: [{ id, type, label, times, text, ref? }] }`.
+  - Song model: `{ title, artist, key, bpm, capo, time, size, two, folder?, updatedAt, sections: [{ id, type, label, times, text, ref? }] }`.
+  - Folders are derived from the songs' `folder` field (`folderOf()`, `listFolders()`); there is no separate folder list. The top-bar folder filter is a per-device preference in localStorage `guions.folder`.
   - A `rep` section has no text. It points at an earlier written section through `ref`.
   - Labels such as "Estrofa 2" are derived by `autoLabels()` and never stored.
   - `parseText()` classifies each line as `gap`, `tab`, `note`, `chordrow` or `line`. Chords are written inline as `[Am]`.
