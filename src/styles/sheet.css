@@ -51,9 +51,10 @@
   .sheet .s-meta { justify-content: flex-start; }
 }
 @media print {
-  @page { size: A4; margin: 13mm 14mm; }
+  /* Margin 0 makes browsers drop their own header/footer (date, title, URL, page number); the margins come from the sheet's padding, cloned on every page. */
+  @page { size: A4; margin: 0; }
   html, body { background: #fff !important; margin: 0; padding: 0; }
-  .sheet { box-shadow: none; padding: 0; max-width: none; min-height: 0; border-radius: 0; }
+  .sheet { box-shadow: none; padding: 13mm 14mm; -webkit-box-decoration-break: clone; box-decoration-break: clone; max-width: none; min-height: 0; border-radius: 0; }
   .sheet .sec { grid-template-columns: 6.6em minmax(0,1fr); }
   .sheet .sec-lab { margin: 0; }
   .sheet.two .sec { display: block; }
