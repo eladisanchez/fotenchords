@@ -14,6 +14,7 @@ export function liveSongs(songs) {
 export function loadAuth() {
   try {
     const a = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+    if (a?.guest === true) return { guest: true, password: "", canEdit: true }; // local-only session, never syncs
     return a && typeof a.password === "string" ? { password: a.password, canEdit: !!a.canEdit } : null;
   } catch {
     return null;

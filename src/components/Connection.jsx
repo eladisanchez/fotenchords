@@ -10,10 +10,21 @@ const SYNC_TEXT = {
 };
 
 /** Remote connection card: shared password in, role and sync state out. */
-export default function Connection({ auth, sync, onConnect, onDisconnect, onSync }) {
+export default function Connection({ auth, sync, onConnect, onDisconnect, onSync, onGuest }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+
+  if (auth?.guest) {
+    return (
+      <div className="card"><h2>Connexió</h2>
+        <p className="notice" style={{ margin: 0 }}>Mode <strong>convidat</strong>. Les cançons només es desen en aquest dispositiu i no se sincronitzen.</p>
+        <div className="add-row">
+          <button className="btn primary" type="button" onClick={onDisconnect}>Entra amb contrasenya</button>
+        </div>
+      </div>
+    );
+  }
 
   if (auth) {
     return (
@@ -49,6 +60,7 @@ export default function Connection({ auth, sync, onConnect, onDisconnect, onSync
       {error ? <p className="notice bad" style={{ margin: 0 }} role="alert">{error}</p> : null}
       <div className="add-row">
         <button className="btn primary" type="submit" disabled={busy}>{busy ? "Entrant…" : "Entra"}</button>
+        {onGuest ? <button className="btn" type="button" onClick={onGuest} disabled={busy}>Entra com a convidat</button> : null}
       </div>
     </form>
   );

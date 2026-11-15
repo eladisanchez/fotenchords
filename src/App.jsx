@@ -44,7 +44,7 @@ export default function App() {
   const [status, setStatus] = useState(SAVED);
   const [focusId, setFocusId] = useState(null);
   const [auth, setAuth] = useState(loadAuth); // { password, canEdit } | null (local only)
-  const [sync, setSync] = useState(auth ? "syncing" : null);
+  const [sync, setSync] = useState(auth && !auth.guest ? "syncing" : null);
   const readOnly = !!auth && !auth.canEdit;
   const [tab, setTab] = useState(readOnly ? "sheet" : "edit");
 
@@ -112,7 +112,7 @@ export default function App() {
   const push = useCallback(async () => {
     clearTimeout(pushTimer.current);
     const a = authRef.current;
-    if (!a?.canEdit || !pending.current.size) return;
+    if (!a?.canEdit || a.guest || !pending.current.size) return;
     if (pushing.current) { pushTimer.current = setTimeout(() => pushRef.current(), 1000); return; }
     const ids = [...pending.current];
     pending.current.clear();
@@ -133,7 +133,7 @@ export default function App() {
   }, [fail, ingest]);
 
   const schedulePush = useCallback(() => {
-    if (!authRef.current?.canEdit || !pending.current.size) return;
+    if (!authRef.current?.canEdit || authRef.current.guest || !pending.current.size) return;
     setSync("pending");
     clearTimeout(pushTimer.current);
     pushTimer.current = setTimeout(() => pushRef.current(), PUSH_DELAY);
@@ -147,7 +147,7 @@ export default function App() {
 
   const pull = useCallback(async () => {
     const a = authRef.current;
-    if (!a) return;
+    if (!a || a.guest) return;
     setSync("syncing");
     const r = await fetchRemote(a.password);
     if (authRef.current !== a) return;
@@ -171,11 +171,19 @@ export default function App() {
     return null;
   };
 
+  /** Guest: no password, no server. Songs stay on this device only. */
+  const enterGuest = () => {
+    const a = { guest: true, password: "", canEdit: true };
+    saveAuth(a); setAuth(a); authRef.current = a; setSync(null);
+    setTab("edit");
+    notify("Has entrat com a convidat");
+  };
+
   const disconnect = () => {
     clearTimeout(pushTimer.current);
     pending.current.clear();
     saveAuth(null); setAuth(null); authRef.current = null; setSync(null);
-    notify("Sessió tancada");
+    notify(auth?.guest ? "Has sortit del mode convidat" : "Sessió tancada");
   };
 
   useEffect(() => {
@@ -204,7 +212,7 @@ export default function App() {
     const onHide = () => { if (document.visibilityState === "hidden") { flush(); pushRef.current(); } };
     // Another tab/window of the app wrote: take its data, but keep the song we are mid-edit on.
     const onStorage = (e) => {
-      if (e.key === AUTH_KEY) { const a = loadAuth(); setAuth(a); authRef.current = a; setSync(a ? "synced" : null); return; }
+      if (e.key === AUTH_KEY) { const a = loadAuth(); setAuth(a); authRef.current = a; setSync(a && !a.guest ? "synced" : null); return; }
       if (e.key !== LS_KEY) return;
       let incoming = {};
       try { incoming = e.newValue ? JSON.parse(e.newValue) : {}; } catch { return; }
@@ -334,7 +342,7 @@ export default function App() {
       <>
         <main className="login">
           <h1 className="brand">FotenChords<span>.</span></h1>
-          <Connection auth={null} sync={null} onConnect={connect} />
+          <Connection auth={null} sync={null} onConnect={connect} onGuest={enterGuest} />
         </main>
         <div className="toast-wrap" role="status" aria-live="polite">
           {toast ? <div key={toast.key} className={"toast " + toast.kind}>{toast.text}</div> : null}
