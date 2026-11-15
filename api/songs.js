@@ -2,7 +2,7 @@
 //   GET /api/songs  -> { songs, canEdit }   (READ_PASSWORD or EDIT_PASSWORD, always required)
 //   PUT /api/songs  <- { songs: { [id]: song } } changed songs only; EDIT_PASSWORD. Merges by updatedAt, returns { songs }.
 // The password travels as `Authorization: Bearer <encodeURIComponent(password)>`.
-import { BlobPreconditionFailedError, get, put } from "@vercel/blob";
+import { BlobNotFoundError, BlobPreconditionFailedError, get, head, put } from "@vercel/blob";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { mergeNewest } from "../src/lib/storage.js";
 
@@ -27,11 +27,19 @@ function roleOf(request) {
   return null;
 }
 
+// The etag comes from head() (the blob API's own value, the one put() compares against), not from the
+// ETag header of the GET, which can differ (weak/quoted) and made every ifMatch write fail.
+// Head first, content second: if the blob changes in between, the write is rejected and retried.
 async function load() {
+  let etag;
+  try { etag = (await head(PATH)).etag; } catch (e) {
+    if (e instanceof BlobNotFoundError) return { songs: {}, etag: null };
+    throw e;
+  }
   const r = await get(PATH, { access: "private", useCache: false });
   if (!r || r.statusCode !== 200) return { songs: {}, etag: null };
   const text = await new Response(r.stream).text();
-  return { songs: text ? JSON.parse(text) : {}, etag: r.blob.etag };
+  return { songs: text ? JSON.parse(text) : {}, etag };
 }
 
 const isSong = (s) => s && typeof s === "object" && !Array.isArray(s) && Array.isArray(s.sections);
