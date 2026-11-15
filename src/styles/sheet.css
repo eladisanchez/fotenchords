@@ -19,7 +19,8 @@
 .sheet.two .sec { margin-bottom: 1.1em; }
 .sheet .sec { display: grid; grid-template-columns: 6.6em minmax(0,1fr); gap: 0 14px; break-inside: avoid; page-break-inside: avoid; }
 .sheet.two .sec { display: block; }
-.sheet .sec-lab { padding-top: 1.12em; }
+.sheet .sec-lab { padding-top: 0; }
+.sheet:not(.two) .sec:has(.sec-txt > .chordrow:first-child) .sec-lab { padding-top: .17em; } /* chord rows use a taller line */
 .sheet.two .sec-lab { padding-top: 0; margin-bottom: .25em; }
 .sheet .tag { display: inline-block; font-size: .64em; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; background: var(--s-ink); color: var(--s-paper); padding: 3px 6px 2px; border-radius: 3px; line-height: 1.2; }
 .sheet .tag.chorus { background: var(--s-chord); }
@@ -45,7 +46,7 @@
 @media (max-width: 600px) {
   .sheet { padding: 24px 18px 32px; min-height: 0; }
   .sheet .sec { grid-template-columns: minmax(0,1fr); }
-  .sheet .sec-lab { padding-top: 0; margin-bottom: .25em; }
+  .sheet .sec-lab, .sheet:not(.two) .sec:has(.sec-txt > .chordrow:first-child) .sec-lab { padding-top: 0; margin-bottom: .25em; }
   .sheet .s-head { grid-template-columns: minmax(0,1fr); }
   .sheet .s-meta { justify-content: flex-start; }
 }
@@ -54,7 +55,7 @@
   html, body { background: #fff !important; margin: 0; padding: 0; }
   .sheet { box-shadow: none; padding: 0; max-width: none; min-height: 0; border-radius: 0; }
   .sheet .sec { grid-template-columns: 6.6em minmax(0,1fr); }
-  .sheet .sec-lab { padding-top: 1.12em; margin: 0; }
+  .sheet .sec-lab { margin: 0; }
   .sheet.two .sec { display: block; }
   .sheet .tab { overflow: visible; }
 }
