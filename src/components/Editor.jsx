@@ -49,7 +49,7 @@ export function Backup({ onExportAll, onImport, canExport }) {
   );
 }
 
-export default function Editor({ song, update, folders = [], onNew, onExample, onDelete, backup, focusId, onFocused }) {
+export default function Editor({ song, update, folders = [], onNew, onExample, onDelete, backup, connection, focusId, onFocused }) {
   useEffect(() => {
     if (!focusId) return;
     document.getElementById(focusId)?.focus();
@@ -67,6 +67,7 @@ export default function Editor({ song, update, folders = [], onNew, onExample, o
             <button className="btn" type="button" onClick={onExample}>Carrega l'exemple</button>
           </div>
         </div>
+        {connection}
         {backup}
       </>
     );
@@ -187,6 +188,7 @@ export default function Editor({ song, update, folders = [], onNew, onExample, o
         </dl>
       </div>
 
+      {connection}
       {backup}
 
       <div className="card"><h2>Esborra</h2>

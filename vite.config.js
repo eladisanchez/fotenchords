@@ -26,7 +26,9 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"]
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
+        // The song API must always hit the network, never the SPA fallback.
+        navigateFallbackDenylist: [/^\/api\//]
       }
     })
   ]

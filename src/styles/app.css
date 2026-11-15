@@ -56,6 +56,7 @@ button { cursor: pointer; }
 .tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .status { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px; color: var(--muted); }
 .status.error { color: var(--danger); }
+.status.synced { color: var(--accent); }
 .status .spin { transform-origin: 12px 12px; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -66,7 +67,7 @@ button { cursor: pointer; }
 .toast.error { background: var(--danger); color: #fff; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(6px); } }
 
-select, input[type=text], input[type=number], textarea {
+select, input[type=text], input[type=password], input[type=number], textarea {
   background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
 }
 select { padding-right: 28px; }
@@ -127,6 +128,7 @@ textarea.lyrics {
 .empty p { margin: 0; color: var(--muted); max-width: 34ch; }
 .empty .big { font-family: var(--f-display); font-weight: 800; font-size: 34px; text-transform: uppercase; color: var(--ink); line-height: 1; }
 .notice { font-size: 13px; color: var(--muted); }
+.notice.bad { color: var(--danger); font-weight: 700; }
 
 @media (max-width: 880px) {
   main { grid-template-columns: minmax(0, 1fr); }

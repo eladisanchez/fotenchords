@@ -13,9 +13,12 @@ FotenChords: a PWA (React 19 + Vite 8 + `vite-plugin-pwa`) for writing rehearsal
 - `npm run dev`: dev server. The service worker is **not** active in dev.
 - `npm run build`: production build into `dist/`, generating `sw.js`, `manifest.webmanifest` and the Workbox precache.
 - `npm run preview`: serve `dist/`. Use this to test PWA, offline and install behaviour.
+- `vercel dev`: dev server with the `/api` functions (needs `vercel link` and `vercel env pull .env.local` first). Plain `npm run dev` has no API, so remote sync reports offline.
 - `npm run icons`: regenerate the PNG icons in `public/` from `public/favicon.svg` (config: `pwa-assets.config.js`). Icon file names are referenced in `vite.config.js` and `index.html`.
 
 ## Architecture
+
+- **`api/songs.js`**: Vercel function. The whole map is one **private** Vercel Blob, `songs.json`. `GET` returns `{ songs, canEdit }`; `PUT` takes only the changed songs, merges them with `mergeNewest` and writes with `ifMatch` (retries on conflict). Passwords come from env `EDIT_PASSWORD` and optional `READ_PASSWORD` (unset = anyone can read); the client sends `Authorization: Bearer <encodeURIComponent(pw)>`. It imports `src/lib/storage.js`, so that file must stay importable in Node (no top-level browser globals).
 
 - **`src/lib/song.js`**: pure song logic with no React.
   - Song model: `{ title, artist, key, bpm, capo, time, size, two, folder?, updatedAt, sections: [{ id, type, label, times, text, ref? }] }`.
@@ -29,8 +32,12 @@ FotenChords: a PWA (React 19 + Vite 8 + `vite-plugin-pwa`) for writing rehearsal
   - Every edit goes through `update(fn, focusId?)`, which `structuredClone`s the current song, mutates the clone and stamps `updatedAt`. Any change to the songs map must set `dirty.current = true`, or it won't be saved.
   - Persistence writes the whole map to `localStorage` key `guions.songs.v1`, debounced by 700 ms. Set `immediate.current` to write at once instead.
   - A pending save is flushed on `beforeunload`, when the page is hidden (`visibilitychange`), when switching songs and before printing.
+  - **Deletes are tombstones** `{ deleted: true, updatedAt }` kept in the map, so they sync. Everything that lists or picks songs must skip them with `isLive()` (from `song.js`).
+  - **Remote sync** (only when connected): every mutation adds its id to `pending`. After a local `flush()`, a push is scheduled (4 s debounce), and one is sent at once when the page is hidden. A pull (`GET` + `mergeNewest`) runs at start, when the page becomes visible and on `online`; as editor it also queues every local song that is newer or missing remotely, which is how existing local songs migrate up.
+  - **Reader mode** (`canEdit === false`): the editor column shows only the Connexió card, editing controls are disabled and `update()` is a no-op.
   - A `storage` event listener syncs other tabs, but keeps the song being edited while it is dirty. `fromStorage` stops a write-back ping-pong.
-- **`src/lib/storage.js`**: localStorage I/O, `download()` (Blob + `<a download>`), and JSON backup import/export. `parseBackup` accepts a `{id: song}` map, a `{songs: …}` wrapper, or an array, and `mergeNewest` merges by `updatedAt`. Songs exist only on the device, so the JSON backup is the only way to move or migrate them.
+- **`src/lib/remote.js`**: `fetchRemote` / `pushRemote`; every call resolves to `{ ok, … }` or `{ ok: false, error: "offline" | "auth" | "server" }`.
+- **`src/lib/storage.js`**: localStorage I/O, `download()` (Blob + `<a download>`), and JSON backup import/export. `parseBackup` accepts a `{id: song}` map, a `{songs: …}` wrapper, or an array, and `mergeNewest` merges by `updatedAt`. `liveSongs()` drops tombstones; `loadAuth`/`saveAuth` keep the connection (`{ password, canEdit }`) in `guions.auth.v1`.
 - **`src/components/Sheet.jsx`**: renders the printed sheet as JSX, with no `innerHTML`. `SheetContent` is shared with **`src/lib/exportHtml.jsx`**, which uses `react-dom/server`, so the downloadable print-ready HTML and the preview can't drift apart.
 - **`src/components/Editor.jsx`**: section cards and the backup card. The `Editor` is keyed by song id in `App`.
 

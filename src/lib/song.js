@@ -12,7 +12,10 @@ export const folderOf = (s) => String(s?.folder || "").trim();
 
 /** Unique non-empty folder names across a { [id]: song } map, sorted. */
 export const listFolders = (songs) =>
-  [...new Set(Object.values(songs).map(folderOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+  [...new Set(Object.values(songs).filter(isLive).map(folderOf).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ca"));
+
+/** False for deletion tombstones ({ deleted: true, updatedAt }), which stay in the map so deletes sync. */
+export const isLive = (s) => !!s && !s.deleted;
 
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/-/g, "").slice(0, 16);

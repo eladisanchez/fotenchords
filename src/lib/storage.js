@@ -1,5 +1,31 @@
+import { isLive } from "./song.js";
+
 // Songs live in localStorage as { [id]: song }. Same key and shape as the original single-file app.
+// A deleted song stays as a tombstone { deleted: true, updatedAt } so the delete reaches the remote copy.
 export const LS_KEY = "guions.songs.v1";
+export const AUTH_KEY = "guions.auth.v1";
+
+/** The map without tombstones: what the UI lists and what the JSON backup exports. */
+export function liveSongs(songs) {
+  return Object.fromEntries(Object.entries(songs).filter(([, s]) => isLive(s)));
+}
+
+/** Remote connection: { password, canEdit } or null when the app is local only. */
+export function loadAuth() {
+  try {
+    const a = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+    return a && typeof a.password === "string" ? { password: a.password, canEdit: !!a.canEdit } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveAuth(auth) {
+  try {
+    if (auth) localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    else localStorage.removeItem(AUTH_KEY);
+  } catch { /* private mode: the connection lasts for this session only */ }
+}
 
 export function loadSongs() {
   try {
