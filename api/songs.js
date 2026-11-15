@@ -72,6 +72,7 @@ export async function PUT(request) {
   if (!incoming) return json({ error: "bad request" }, 400);
 
   // Optimistic concurrency: write only if nobody changed the blob since we read it; otherwise re-read and merge again.
+  let lastConflict = "";
   for (let attempt = 0; attempt < 4; attempt++) {
     try {
       const { songs, etag } = await load();
@@ -87,7 +88,9 @@ export async function PUT(request) {
     } catch (e) {
       const conflict = e instanceof BlobPreconditionFailedError || /already exists/i.test(String(e?.message));
       if (!conflict) { console.error(e); return json({ error: "server" }, 500); }
+      lastConflict = `${e?.name}: ${e?.message}`;
     }
   }
-  return json({ error: "conflict" }, 409);
+  console.error("songs.json write conflict after retries:", lastConflict);
+  return json({ error: "conflict", detail: lastConflict }, 409);
 }
