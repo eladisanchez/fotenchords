@@ -1,5 +1,5 @@
 // Vercel function: the whole song map lives in one private blob, songs.json, shaped { [id]: song | tombstone }.
-//   GET /api/songs  -> { songs, canEdit }   (READ_PASSWORD or EDIT_PASSWORD; open read if READ_PASSWORD is unset)
+//   GET /api/songs  -> { songs, canEdit }   (READ_PASSWORD or EDIT_PASSWORD, always required)
 //   PUT /api/songs  <- { songs: { [id]: song } } changed songs only; EDIT_PASSWORD. Merges by updatedAt, returns { songs }.
 // The password travels as `Authorization: Bearer <encodeURIComponent(password)>`.
 import { BlobPreconditionFailedError, get, put } from "@vercel/blob";
@@ -16,7 +16,7 @@ const json = (data, status = 200) =>
 const digest = (s) => createHash("sha256").update(String(s)).digest();
 const matches = (given, expected) => !!expected && timingSafeEqual(digest(given), digest(expected));
 
-/** "edit", "read" or null. A non-empty wrong password is rejected even when reading is open, so typos show up. */
+/** "edit", "read" or null. A password is always required. */
 function roleOf(request) {
   const m = /^Bearer (.*)$/.exec(request.headers.get("authorization") || "");
   let pw = "";
@@ -24,7 +24,6 @@ function roleOf(request) {
   const { EDIT_PASSWORD, READ_PASSWORD } = process.env;
   if (pw && matches(pw, EDIT_PASSWORD)) return "edit";
   if (pw && matches(pw, READ_PASSWORD)) return "read";
-  if (!pw && !READ_PASSWORD) return "read";
   return null;
 }
 

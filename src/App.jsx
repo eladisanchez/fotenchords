@@ -87,8 +87,14 @@ export default function App() {
   }, [notify]);
 
   const fail = useCallback((error) => {
-    setSync(error === "auth" ? "auth" : error === "offline" ? "offline" : "error");
-    if (error === "auth") notify("Contrasenya incorrecta", "error");
+    if (error === "auth") {
+      // The saved password no longer works (changed on the server): back to the login screen.
+      clearTimeout(pushTimer.current);
+      saveAuth(null); setAuth(null); authRef.current = null; setSync(null);
+      notify("La contrasenya ja no és vàlida. Torna a entrar.", "error");
+      return;
+    }
+    setSync(error === "offline" ? "offline" : "error");
   }, [notify]);
 
   /** Merge a remote map into the local one (newest copy of each song wins) and save it here. */
@@ -169,7 +175,7 @@ export default function App() {
     clearTimeout(pushTimer.current);
     pending.current.clear();
     saveAuth(null); setAuth(null); authRef.current = null; setSync(null);
-    notify("Desconnectat: les cançons queden en aquest dispositiu");
+    notify("Sessió tancada");
   };
 
   useEffect(() => {
@@ -321,6 +327,21 @@ export default function App() {
   const shownStatus = status.kind !== "saved" || !auth || !sync ? status : SYNC[sync];
   const connection = <Connection auth={auth} sync={sync} onConnect={connect} onDisconnect={disconnect} onSync={pull} />;
   const onFocused = useCallback(() => setFocusId(null), []);
+
+  // Login is mandatory: without a saved connection nothing else is rendered.
+  if (!auth) {
+    return (
+      <>
+        <main className="login">
+          <h1 className="brand">FotenChords<span>.</span></h1>
+          <Connection auth={null} sync={null} onConnect={connect} />
+        </main>
+        <div className="toast-wrap" role="status" aria-live="polite">
+          {toast ? <div key={toast.key} className={"toast " + toast.kind}>{toast.text}</div> : null}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

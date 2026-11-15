@@ -6,7 +6,7 @@ const SYNC_TEXT = {
   syncing: "Sincronitzant…",
   offline: "Sense connexió. Els canvis es desen aquí i es pujaran quan torni la xarxa.",
   error: "Error de sincronització. Es tornarà a provar.",
-  auth: "La contrasenya ja no és vàlida. Desconnecta i torna a entrar."
+  auth: "La contrasenya ja no és vàlida. Torna a entrar."
 };
 
 /** Remote connection card: shared password in, role and sync state out. */
@@ -25,7 +25,7 @@ export default function Connection({ auth, sync, onConnect, onDisconnect, onSync
         {sync ? <p className={"notice" + (sync === "error" || sync === "auth" ? " bad" : "")} style={{ margin: 0 }}>{SYNC_TEXT[sync]}</p> : null}
         <div className="add-row">
           <button className="btn" type="button" onClick={onSync} disabled={sync === "syncing"}>Sincronitza ara</button>
-          <button className="btn danger" type="button" onClick={onDisconnect}>Desconnecta</button>
+          <button className="btn danger" type="button" onClick={onDisconnect}>Tanca la sessió</button>
         </div>
       </div>
     );
@@ -40,15 +40,15 @@ export default function Connection({ auth, sync, onConnect, onDisconnect, onSync
   };
 
   return (
-    <form className="card" onSubmit={submit}><h2>Connexió</h2>
-      <p className="notice" style={{ margin: 0 }}>Connecta't per tenir les cançons al núvol: la contrasenya d'edició per editar des de qualsevol aparell, o la de lectura per veure-les i imprimir-les.</p>
+    <form className="card" onSubmit={submit}><h2>Entra</h2>
+      <p className="notice" style={{ margin: 0 }}>Escriu la contrasenya d'edició per editar les cançons, o la de lectura per veure-les i imprimir-les.</p>
       <div className="field">
         <label htmlFor="conn-pw">Contrasenya</label>
-        <input type="password" id="conn-pw" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input type="password" id="conn-pw" autoFocus autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
       {error ? <p className="notice bad" style={{ margin: 0 }} role="alert">{error}</p> : null}
       <div className="add-row">
-        <button className="btn primary" type="submit" disabled={busy}>{busy ? "Connectant…" : "Connecta"}</button>
+        <button className="btn primary" type="submit" disabled={busy}>{busy ? "Entrant…" : "Entra"}</button>
       </div>
     </form>
   );
